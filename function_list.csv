@@ -1,0 +1,4 @@
+function,arn
+Request_func,arn:aws:lambda:us-west-2:261330375245:function:requests_func
+askitbot,arn:aws:lambda:us-west-2:261330375245:function:askitbot
+lm_slack_app,arn:aws:lambda:us-west-2:261330375245:function:LM_Slack_app
