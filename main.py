@@ -17,11 +17,12 @@ logger.setLevel(logging.DEBUG)
 
 
 def getdata(url):
+    '''
+    Use this function to do all the necessary changes to the data. Here I have read a csv file from S3 but this can be modified based on requirement'''
     # Preprocessing of data
     raw_data = pd.read_csv(url)
     raw_data = raw_data.drop_duplicates()
-    raw_data['Jira ID'] = raw_data['Jira ID'].fillna('Not Found')
-    print(raw_data.head(5))
+    
     return raw_data
 
 def request_parse(event):
@@ -83,7 +84,9 @@ def verify(event):
     logger.debug("Inside Verification Function: Token: %s  & Enterprise Name = %s" %(str(request_json['token']),enterprise_name))
     
     
-    # Add an additional expected_enterprise_name ==  enterprise_name condition if using enterprise slack account
+    # Add an additional expected_enterprise_name ==  enterprise_name condition if using enterprise slack account. 
+    # This is an optional authentication step which can be ignored as the token can be used on its own to validate the account. 
+    # However, it would be a good practice to include this level if this solution is being made for an enterprise slack to ensure that requests from slack sources outside the enterprise domain is not authenticated
     if request_json['token']==expected_verification_token:
         code = 200
 
@@ -145,21 +148,38 @@ def api_handler(event):
 
 
 def slack_message_generator(search_string,dataframe):
+    ''' 
+    Use this function to write relevant steps for producing text based responses for the slash command. In this example I have used a pandas dataframe and using the 'text' obtained from the request body as a 'search_string' I am filtering relevant data, converting them into readable message format and then delivering it to the user
+
+    WARNING: The code in this function block is just an example. Please create your own steps for customizing
+    '''
+
     text = ''
     
     if search_string != '':
-        relevant_data = dataframe[dataframe['Ref ID'].str.contains(pat=search_string, flags=re.IGNORECASE, na=False)]
+        relevant_data = dataframe[dataframe['Filter Column'].str.contains(pat=search_string, flags=re.IGNORECASE, na=False)]
         
+        # If the relevant_data has some data
         if len(relevant_data)!=0:
             for row,index in relevant_data.iterrows():
-                text = text + f"```Reference ID: {relevant_data['Ref ID'][row]} \nRelated JIRA ID: {relevant_data['Jira ID'][row]} \nVendor (Finance listed): {relevant_data['Vendor (As listed by Finance)'][row]} \nSummary: {relevant_data['Summary'][row]} \nDescription: {relevant_data['Description'][row]} \nPriority: {relevant_data['Priority'][row]} \nCategory: {relevant_data['Combined Category'][row]} \nAssignee: {relevant_data['Assignee'][row]} \nProposed Action: {relevant_data['Combined Proposed Action'][row]} \n2020 Baseline: ${relevant_data['2020 Baseline'][row]:0.0f} \n2020 Outlook vs Baseline: ${relevant_data['2020 Outlook vs Baseline'][row]:0.0f} \nAnnualized Savings or Increase: ${relevant_data['Annualized Savings or Increase'][row]:0.0f} \nNew 2020 Outlook: ${relevant_data['New 2020 Outlook'][row]:0.0f} \n2021 Outlook: ${relevant_data['2021 Outlook'][row]:0.0f} \nMar FC vs 2021 Outlook: ${relevant_data['Mar FC vs 2021 Outlook'][row]:0.0f}``` \n\n"
+                text = text + ''' Necessary Text using columns of the relevant_data dataframe. Please refer to the slack documentation 
+                to create nice formatted text outputs'''
+        
+        # If the filtered dataset is empty
         else:
             text = "```ERROR: No Data found for the search string: %s```"%(search_string)
+    
+    # If the search_string is empty in the request body
     elif search_string == '':
         text = '```ERROR: Search string is empty```'
     return text
     
 def dispatcher(event,context):
+
+    '''
+    This function is a central function dispatcher that is deployed from the lambda handler as a thread
+    '''
+
     verification_token = 400
 
     # Trying to extract slack request body
@@ -198,7 +218,9 @@ def dispatcher(event,context):
             }
             return response
     
-
+'''
+This is the handler for the lambda function. This receives the slack request and starts dispatching them into different functions.
+'''
 def lambda_handler(event,context):
     thr = Thread(target=dispatcher, args=[event,context])
     thr.start()
