@@ -8,8 +8,10 @@ import re
 from threading import Thread
 
 # Configuration
-file_url = "https://dpiadirectory.s3-us-west-2.amazonaws.com/LM/LM+Master+View.csv" # Public URL of the S3 file
+file_url = "URL of the S3 File" # Public URL of the S3 file
 slack_verification_token = os.environ['slack_verification_token'] # This value is taken from the environment variable of slack. It has to be manually placed there for this to work
+
+# Activating the logger to log into cloudwatch
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -23,8 +25,10 @@ def getdata(url):
     return raw_data
 
 def request_parse(event):
+    ''' This particular function will be used to decode the base64 encoded slack event body. This function is envoked from the dispatcher and other functions here to gather different components of the request body like authentication token, enterprise name, response URL, etc. Using that, we can run various other functions in this code'''
 
-    request_body = b64decode(str(event["body"])).decode() #Decoding the request from base64 encoded format
+     #Decoding the request from base64 encoded format
+    request_body = b64decode(str(event["body"])).decode()
 
     # Some general replacements of string values to convert the request body into a dictionary like structure
     request_body = request_body.replace("&",", ")
@@ -51,12 +55,24 @@ def request_parse(event):
 
 
 def verify(event):
-    request_json = request_parse(event)
-    expected_verification_token = slack_verification_token    # Enter the verification token found in the basic information page of your app here
-    #expected_enterprise_name = 'Expedia+Group'              # If you have an enterprise account, enter the enterprise name here. Use + instead of spaces
-    
-    code = 400
 
+    '''
+    This function uses the contents of the request body obtained from the request_parse function to verify if the request is coming from a valid slack based point of source. The conditions checked are:
+    - Validity of slack verification token
+    - [OPTIONAL] Enterprise Name
+    '''
+
+    request_json = request_parse(event)
+    # Enter the verification token found in the basic information page of your app here. The token can also be stored under environment variables of the lambda function
+    expected_verification_token = slack_verification_token
+
+    # Uncomment below if you have an enterprise account. Enter the enterprise name and use + instead of spaces
+    #expected_enterprise_name = 'My+Good+Company'              
+    
+    # Setting the default authentication token as 400 (invalid)
+    code = 400
+    
+    # Some slack requests body might not have enterprise name at all so using a try block below to catch related error
     try:
         enterprise_name = request_json['enterprise_name']
     except:
@@ -65,6 +81,7 @@ def verify(event):
     logger.debug("Inside Verification Function: Token: %s  & Enterprise Name = %s" %(str(request_json['token']),enterprise_name))
     
     
+    # Add an additional expected_enterprise_name ==  enterprise_name condition if using enterprise slack account
     if request_json['token']==expected_verification_token:
         code = 200
 
