@@ -62,7 +62,9 @@ def verify(event):
     - [OPTIONAL] Enterprise Name
     '''
 
+    # Calling the parsing function to decode the event body to get slack request data
     request_json = request_parse(event)
+    
     # Enter the verification token found in the basic information page of your app here. The token can also be stored under environment variables of the lambda function
     expected_verification_token = slack_verification_token
 
@@ -89,33 +91,56 @@ def verify(event):
 
 
 def api_handler(event):
+
+    ''' One of the most important functions of this template is the API handler. Here we add the routes (slack slash commands) and related functions or steps to be triggered whenever that route is called
+    '''
+
     logger.debug("Inside API HANDLER")
+
+    # Running the getdata function to get relevant data that will serve as a response for the slack command
     data = getdata(file_url)
     logger.debug("Data read complete")
     
+    # Parsing the request body to get the relevant slash command and text prompt and response URL
     request_json = request_parse(event)
+    
+    # Getting the slash command. This will help in understanding what function to trigger
     slashcommand = request_json['command'].replace('%2F','')
+    
+    # Getting the response URL to respond based on a request
     url = request_json['response_url'].replace('%2F','/').replace('%3A',':')
     
     logger.debug("Event data cleaned")
     
-    
+    # Getting the text string parameter which would be used in the triggering function based on the slash command
     search_string = request_json['text']
-    if slashcommand.lower() == 'lmsearch':
+    
+    
+    # The slash command if-else block to re-direct the commands to their specific functions. If the command is not recognized, the response would be a default statement
+
+    if slashcommand.lower() == 'firstslashcommand':
+
+        # Sending an initial_resp (initial response) within 3 seconds of the request to prevent request timeout error on slack
         initial_resp = {
         "text": 'Fetching results...'
         }
         requests.post(url, data = json.dumps(initial_resp))
+        
+        # This is the part where the required function gets triggered for a slash command. Many functions can be written based on requirement of a particular case. For this case, we assume that we have to send some text insights which we will generate on the slack_message_generator function
         text = slack_message_generator(search_string,data)
     
+    # Default response if the slack slash command is not recognized
     else:
         text = "I don't know what to do"
     
     
+    # Creating a message json object to respond. After the initial response is done, this response can be provided within the next 30 minutes of the initial response
+
     response = {
     "text": text
     }
     
+    # Using the response url 'url' to respond with the necessary results
     return requests.post(url, data = json.dumps(response))
 
 
