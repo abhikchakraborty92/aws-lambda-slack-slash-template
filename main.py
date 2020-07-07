@@ -15,7 +15,10 @@ import boto3
 file_key = "Key of the S3 File" # you can find the s3 key under the file details inside your s3 bucket
 bucket = 'S3 Bucket' # S3 Bucket where the data file is stored
 
-# This value is taken from the environment variable of slack. It has to be manually placed there for this to work
+# This value is taken from the environment variable of slack. It has to be manually placed there for this to work. The lambda function has its own set of environment variable settings where this can be added. Please ensure that the variable name is 'slack_verification_token' and the value is your verification token which can be found under your slack app. 
+
+# If you need to know how to create a slack app, go to https://api.slack.com/apps
+
 slack_verification_token = os.environ['slack_verification_token'] 
 
 # Activating the logger to log into cloudwatch
