@@ -6,21 +6,33 @@ from base64 import b64decode
 import requests
 import re
 from threading import Thread
+import boto3
 
 # Configuration
-file_url = "URL of the S3 File" # Public URL of the S3 file
-slack_verification_token = os.environ['slack_verification_token'] # This value is taken from the environment variable of slack. It has to be manually placed there for this to work
+
+# Data file configuration
+# This is optional and can be replaced with RDS or any other source based on which slack notification have to be sent out
+file_key = "S3 of the S3 File" # you can find the s3 key under the file details inside your s3 bucket
+bucket = 'S3 Bucket' # S3 Bucket where the data file is stored
+
+# This value is taken from the environment variable of slack. It has to be manually placed there for this to work
+slack_verification_token = os.environ['slack_verification_token'] 
 
 # Activating the logger to log into cloudwatch
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+# Activating an S3 Client
+# Please note that access to S3 is only granted if the required permissions are provided to the role used for the lambda function. To define a role, go to AWS IAM and create new role with necessary read permission to S3
+s3 = boto3.client('s3')
 
 def getdata(url):
     '''
     Use this function to do all the necessary changes to the data. Here I have read a csv file from S3 but this can be modified based on requirement'''
+    
     # Preprocessing of data
-    raw_data = pd.read_csv(url)
+    file = s3.get_object(Bucket=bucket,Key=file_key) # Accessing the S3 file
+    raw_data = pd.read_csv(file['body'],sep=',')
     raw_data = raw_data.drop_duplicates()
     
     return raw_data
