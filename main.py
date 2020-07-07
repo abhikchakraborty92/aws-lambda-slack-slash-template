@@ -12,7 +12,7 @@ import boto3
 
 # Data file configuration
 # This is optional and can be replaced with RDS or any other source based on which slack notification have to be sent out
-file_key = "S3 of the S3 File" # you can find the s3 key under the file details inside your s3 bucket
+file_key = "Key of the S3 File" # you can find the s3 key under the file details inside your s3 bucket
 bucket = 'S3 Bucket' # S3 Bucket where the data file is stored
 
 # This value is taken from the environment variable of slack. It has to be manually placed there for this to work
