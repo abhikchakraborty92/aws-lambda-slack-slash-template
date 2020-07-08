@@ -18,7 +18,8 @@ client = boto3.client('lambda')
 
 def trigger_lambda(arn_string):
     '''
-    Simple trigger function to send pinging triggers to lambda functions. This is done by using the ARN of a function and sending it a very simple trigger request using boto3 library
+    Simple trigger function to send pinging triggers to lambda functions. 
+    This is done by using the ARN of a function and sending it a very simple trigger request using boto3 library
     '''
 
 
@@ -52,11 +53,9 @@ def lambda_handler(event, context):
         try:
             resp = trigger_lambda(function_list['arn'][row])
             notification_text = 'LAMBDA FUNCTION NAME: %s | TRIGGER RESPONSE: Function Trigger Successful'%(str(function_list['function'][row]))
-            # requests.post('https://slack.com/api/chat.postMessage?token=xoxb-9449251159-725034694387-ZUsbLWBcKjXag906n0Wk8ioi&channel=eit_analytics_bot&text='+notification_text+'&pretty=1')
             print(notification_text)
         except:
             notification_text = 'LAMBDA FUNCTION NAME: %s | TRIGGER RESPONSE: Function Trigger Failed'%(str(function_list['function'][row]))
-            requests.post('https://slack.com/api/chat.postMessage?token=xoxb-9449251159-725034694387-ZUsbLWBcKjXag906n0Wk8ioi&channel=eit_analytics_bot&text='+notification_text+'&pretty=1')
             print(notification_text)
         
     return 'Done'
