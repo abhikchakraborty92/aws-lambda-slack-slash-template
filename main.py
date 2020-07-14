@@ -29,7 +29,7 @@ logger.setLevel(logging.DEBUG)
 # Please note that access to S3 is only granted if the required permissions are provided to the role used for the lambda function. To define a role, go to AWS IAM and create new role with necessary read permission to S3
 s3 = boto3.client('s3')
 
-def getdata(url):
+def getdata():
     '''
     Use this function to do all the necessary changes to the data. Here I have read a csv file from S3 but this can be modified based on requirement'''
     
@@ -116,7 +116,7 @@ def api_handler(event):
     logger.debug("Inside API HANDLER")
 
     # Running the getdata function to get relevant data that will serve as a response for the slack command
-    data = getdata(file_url)
+    data = getdata()
     logger.debug("Data read complete")
     
     # Parsing the request body to get the relevant slash command and text prompt and response URL
